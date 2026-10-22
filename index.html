@@ -1,0 +1,1353 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      TRAVIATOR — The World Is Still Wild | Interactive 3D Adventure Expeditions
+    </title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Three.js Library CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              obsidian: "#0A0C0F",
+              slateDark: "#11141A",
+              slateCard: "#181C24",
+              limeAccent: "#D4F34A",
+              sageMuted: "#8E9F88",
+              warmIvory: "#F5F4EE",
+              grayBorder: "#232832",
+            },
+            fontFamily: {
+              serif: ['"Cormorant Garamond"', "serif"],
+              sans: ['"Plus Jakarta Sans"', "sans-serif"],
+              mono: ['"Space Mono"', "monospace"],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body
+    class="bg-obsidian text-warmIvory font-sans antialiased overflow-x-hidden selection:bg-limeAccent selection:text-obsidian relative bg-grain"
+  >
+    <!-- Custom Cursor Layer -->
+    <div
+      id="cursor-circle"
+      class="custom-cursor hidden lg:block w-8 h-8 border border-limeAccent/60 rounded-full"
+    ></div>
+    <div id="cursor-dot" class="custom-cursor-dot hidden lg:block"></div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div
+      id="toast-container"
+      class="fixed top-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"
+    ></div>
+
+    <!-- NAVIGATION HEADER -->
+    <header
+      class="fixed top-0 left-0 w-full z-50 transition-all duration-300 px-6 lg:px-12 py-6"
+      id="navbar"
+    >
+      <div
+        class="max-w-7xl mx-auto flex items-center justify-between backdrop-blur-md bg-obsidian/40 border border-white/10 rounded-full px-6 py-3.5 transition-all duration-300 shadow-2xl"
+      >
+        <!-- Brand Logo -->
+        <a href="#" class="group flex items-center gap-3 cursor-pointer">
+          <div
+            class="w-8 h-8 rounded-full border border-limeAccent/80 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 bg-obsidian"
+          >
+            <span class="text-limeAccent font-serif italic text-lg font-bold"
+              >T</span
+            >
+          </div>
+          <span
+            class="font-serif tracking-[0.2em] text-xl font-bold text-warmIvory group-hover:text-limeAccent transition-colors"
+            >TRAVIATOR</span
+          >
+        </a>
+
+        <!-- Desktop Nav Links -->
+        <nav
+          class="hidden md:flex items-center gap-8 text-xs font-mono tracking-[0.15em] text-warmIvory/70 uppercase"
+        >
+          <a
+            href="#about"
+            class="hover:text-limeAccent transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-limeAccent hover:after:w-full after:transition-all"
+            >Philosophy</a
+          >
+          <a
+            href="#journeys"
+            class="hover:text-limeAccent transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-limeAccent hover:after:w-full after:transition-all"
+            >Journeys</a
+          >
+          <a
+            href="#destinations"
+            class="hover:text-limeAccent transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-limeAccent hover:after:w-full after:transition-all"
+            >Terrain Matrix</a
+          >
+          <a
+            href="#planner"
+            class="hover:text-limeAccent transition-colors py-1 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[1px] after:bg-limeAccent hover:after:w-full after:transition-all"
+            >Route Planner</a
+          >
+        </nav>
+
+        <!-- Action Controls -->
+        <div class="flex items-center gap-4">
+          <!-- Audio Ambient Synthesizer Button -->
+          <button
+            id="audio-toggle"
+            class="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 hover:border-limeAccent/50 bg-white/5 text-xs text-warmIvory/80 hover:text-limeAccent transition-all cursor-pointer"
+            title="Toggle Spatial Audio"
+          >
+            <div class="flex items-end gap-0.5 h-3">
+              <div
+                class="visualizer-bar w-0.5 bg-limeAccent rounded-full"
+              ></div>
+              <div
+                class="visualizer-bar w-0.5 bg-limeAccent rounded-full"
+              ></div>
+              <div
+                class="visualizer-bar w-0.5 bg-limeAccent rounded-full"
+              ></div>
+            </div>
+            <span
+              id="audio-state-text"
+              class="text-[10px] font-mono uppercase tracking-wider"
+              >Sound Off</span
+            >
+          </button>
+
+          <!-- CTA Button -->
+          <a
+            href="#planner"
+            class="hidden lg:inline-flex items-center gap-2 px-5 py-2 rounded-full bg-limeAccent text-obsidian font-bold text-xs font-mono uppercase tracking-wider hover:bg-white hover:shadow-[0_0_20px_rgba(212,243,74,0.4)] transition-all transform hover:-translate-y-0.5"
+          >
+            <span>Book Expedition</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </a>
+
+          <!-- Mobile Hamburger Button -->
+          <button
+            id="mobile-menu-btn"
+            class="md:hidden text-warmIvory hover:text-limeAccent focus:outline-none p-1"
+          >
+            <i class="fa-solid fa-bars-staggered text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- MOBILE NAVIGATION OVERLAY -->
+<div
+  id="mobile-menu"
+  class="fixed inset-0 z-[9998] bg-obsidian/95 backdrop-blur-xl flex flex-col justify-between p-8 opacity-0 pointer-events-none transition-opacity duration-300 md:hidden"
+>
+      <div class="flex justify-between items-center pt-4">
+        <span
+          class="font-serif tracking-[0.2em] text-xl font-bold text-warmIvory"
+          >TRAVIATOR</span
+        >
+<button
+  id="close-mobile-menu"
+  type="button"
+  class="relative z-[10000] text-warmIvory hover:text-limeAccent text-2xl p-2 cursor-pointer"
+  aria-label="Close navigation menu"
+>
+  <i class="fa-solid fa-xmark"></i>
+</button>
+      </div>
+
+      <nav
+        class="flex flex-col gap-6 font-serif text-3xl tracking-wide my-auto"
+      >
+        <a
+          href="#about"
+          class="mobile-link text-warmIvory/80 hover:text-limeAccent hover:italic transition-all"
+          >01. Philosophy</a
+        >
+        <a
+          href="#journeys"
+          class="mobile-link text-warmIvory/80 hover:text-limeAccent hover:italic transition-all"
+          >02. Featured Journeys</a
+        >
+        <a
+          href="#destinations"
+          class="mobile-link text-warmIvory/80 hover:text-limeAccent hover:italic transition-all"
+          >03. Terrain Matrix</a
+        >
+        <a
+          href="#planner"
+          class="mobile-link text-warmIvory/80 hover:text-limeAccent hover:italic transition-all"
+          >04. Route Planner</a
+        >
+      </nav>
+
+      <div class="border-t border-white/10 pt-6 flex flex-col gap-4 font-mono">
+        <p class="text-xs tracking-widest text-warmIvory/40 uppercase">
+          LIVE GPS: 64.1466° N, 21.9426° W
+        </p>
+        <a
+          href="#planner"
+          class="mobile-link w-full text-center py-3 rounded-full bg-limeAccent text-obsidian font-bold text-xs uppercase tracking-widest"
+        >
+          Reserve Expedition
+        </a>
+      </div>
+    </div>
+
+    <!-- SECTION A: HERO SECTION WITH INTERACTIVE 3D GLOBE -->
+    <section
+      class="relative min-h-screen w-full flex flex-col justify-between pt-28 pb-12 px-6 lg:px-12 overflow-hidden"
+    >
+      <!-- Hero Background Gradient & Vignette -->
+      <div class="absolute inset-0 z-0 hero-overlay pointer-events-none"></div>
+
+      <!-- Top Hero Operational Bar -->
+      <div
+        class="relative z-10 max-w-7xl mx-auto w-full flex flex-wrap justify-between items-center text-xs font-mono tracking-[0.2em] text-warmIvory/60 uppercase gap-4"
+      >
+        <div class="flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full bg-limeAccent animate-ping"></span>
+          <span>CHAPTER 01 // ORBITAL TELEMETRY</span>
+        </div>
+        <div class="hidden sm:flex items-center gap-6 text-[11px]">
+          <span id="globe-active-waypoint" class="text-limeAccent"
+            >SELECTED WAYPOINT: SVALBARD 78° N</span
+          >
+          <span>ALTITUDE: 1,420M</span>
+        </div>
+      </div>
+
+      <!-- Hero Asymmetric Main Grid (Left Typography, Right 3D Globe Canvas) -->
+      <div class="relative z-10 max-w-7xl mx-auto w-full my-auto py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <!-- LEFT SIDE: Dramatic Typography & CTA -->
+          <div class="lg:col-span-6 space-y-8">
+            <!-- Location Label Tag -->
+            <p
+              class="inline-flex items-center gap-2 text-limeAccent font-mono text-xs uppercase tracking-[0.25em] bg-limeAccent/10 px-3.5 py-1.5 rounded-full border border-limeAccent/20 backdrop-blur-sm"
+            >
+              <i class="fa-solid fa-globe"></i> Interactive Expedition Globe
+            </p>
+
+            <!-- Main Oversized Headline -->
+            <h1
+              class="font-serif text-5xl sm:text-7xl lg:text-8xl tracking-tight leading-[0.92] font-normal text-warmIvory"
+            >
+              THE WORLD <br />
+              <span class="italic font-light text-limeAccent">IS STILL</span>
+              WILD.
+            </h1>
+
+            <!-- Supporting Copy -->
+            <p
+              class="text-base sm:text-lg font-light text-warmIvory/70 max-w-xl leading-relaxed"
+            >
+              Navigate our high-altitude, polar, and deep-wilderness coordinates
+              on the interactive globe. Select any active waypoint to inspect
+              live terrain dispatches.
+            </p>
+
+            <!-- Hero Action Buttons -->
+            <div class="flex flex-wrap items-center gap-4 pt-2">
+              <a
+                href="#journeys"
+                class="px-8 py-4 rounded-full bg-limeAccent text-obsidian font-bold text-xs font-mono uppercase tracking-[0.2em] hover:bg-white hover:shadow-[0_0_30px_rgba(212,243,74,0.5)] transition-all flex items-center gap-3 group"
+              >
+                <span>Explore Journeys</span>
+                <i
+                  class="fa-solid fa-arrow-right transform group-hover:translate-x-1 transition-transform"
+                ></i>
+              </a>
+
+              <a
+                href="#planner"
+                class="px-8 py-4 rounded-full border border-white/20 bg-white/5 backdrop-blur-md text-warmIvory hover:border-limeAccent hover:text-limeAccent font-mono text-xs uppercase tracking-[0.2em] transition-all"
+              >
+                Custom Route
+              </a>
+            </div>
+
+            <!-- Live Dynamic Telemetry Box (Mobile/Desktop Sync) -->
+            <div
+              class="p-4 rounded-2xl bg-slateCard/80 border border-white/10 backdrop-blur-md max-w-md hidden sm:flex items-center justify-between font-mono text-xs"
+            >
+              <div>
+                <span class="text-[10px] text-warmIvory/40 uppercase block"
+                  >Active Target</span
+                >
+                <span id="telemetry-target" class="text-limeAccent font-bold"
+                  >Svalbard Archipelago</span
+                >
+              </div>
+              <div>
+                <span class="text-[10px] text-warmIvory/40 uppercase block"
+                  >Live Temp</span
+                >
+                <span id="telemetry-temp" class="text-warmIvory">-14°C</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-warmIvory/40 uppercase block"
+                  >Terrain Risk</span
+                >
+                <span id="telemetry-risk" class="text-limeAccent"
+                  >Level IV (Polar)</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT SIDE: INTERACTIVE 3D THREE.JS GLOBE CONTAINER -->
+          <div
+            class="lg:col-span-6 relative w-full h-[450px] sm:h-[550px] lg:h-[620px] flex items-center justify-center"
+          >
+            <!-- Globe Canvas Target -->
+            <div
+              id="globe-container"
+              class="w-full h-full relative cursor-grab active:cursor-grabbing"
+            >
+              <canvas id="globe-canvas" class="w-full h-full"></canvas>
+
+              <!-- Floating Globe Control Instruction Badge -->
+              <div
+                class="absolute bottom-4 right-4 bg-obsidian/80 backdrop-blur-md border border-white/10 px-4 py-2 rounded-full font-mono text-[10px] text-warmIvory/60 flex items-center gap-2 pointer-events-none"
+              >
+                <i
+                  class="fa-solid fa-hand-pointer text-limeAccent animate-pulse"
+                ></i>
+                <span>Drag to rotate globe / Hover waypoints</span>
+              </div>
+
+              <!-- Dynamic Popover Tooltip for Waypoint Hover -->
+              <div
+                id="globe-tooltip"
+                class="absolute z-30 pointer-events-none opacity-0 transition-opacity duration-300 bg-obsidian/90 backdrop-blur-xl border border-limeAccent p-4 rounded-xl shadow-2xl max-w-xs font-mono text-xs space-y-1 transform -translate-x-1/2 -translate-y-full mb-3"
+              >
+                <span
+                  id="tooltip-title"
+                  class="text-limeAccent font-bold block uppercase tracking-wider"
+                  >Waypoint Title</span
+                >
+                <div
+                  class="flex justify-between text-[11px] text-warmIvory/70 pt-1"
+                >
+                  <span
+                    >Coords:
+                    <span id="tooltip-coords" class="text-warmIvory"
+                      >0° N</span
+                    ></span
+                  >
+                  <span
+                    >Alt:
+                    <span id="tooltip-alt" class="text-warmIvory"
+                      >0m</span
+                    ></span
+                  >
+                </div>
+                <p
+                  id="tooltip-desc"
+                  class="text-[10px] text-warmIvory/50 font-sans italic pt-1"
+                >
+                  Waypoint brief description...
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Bottom Scroll Cue -->
+      <div
+        class="relative z-10 max-w-7xl mx-auto w-full flex justify-between items-center border-t border-white/10 pt-6 font-mono text-xs text-warmIvory/50 uppercase tracking-widest"
+      >
+        <div class="flex items-center gap-4">
+          <span>01 // GLOBE NAVIGATION</span>
+          <span class="text-limeAccent">///</span>
+          <span class="hidden sm:inline">SWARM FORCEFIELD ACTIVE</span>
+        </div>
+
+        <a
+          href="#about"
+          class="flex items-center gap-3 hover:text-limeAccent transition-colors group"
+        >
+          <span>Scroll To Discover</span>
+          <i
+            class="fa-solid fa-arrow-down text-limeAccent group-hover:translate-y-1 transition-transform"
+          ></i>
+        </a>
+      </div>
+    </section>
+
+    <!-- SECTION B: EDITORIAL PHILOSOPHY & METRICS -->
+    <section
+      id="about"
+      class="relative py-28 px-6 lg:px-12 bg-obsidian border-t border-white/5 overflow-hidden"
+    >
+      <div class="max-w-7xl mx-auto">
+        <div
+          class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center"
+        >
+          <!-- Left Editorial Statement -->
+          <div class="lg:col-span-7 space-y-8 reveal-up">
+            <div
+              class="flex items-center gap-3 text-limeAccent text-xs font-mono tracking-[0.25em] uppercase"
+            >
+              <span>// MANIFESTO & TELEMETRY</span>
+            </div>
+
+            <h2
+              class="font-serif text-3xl sm:text-5xl lg:text-6xl text-warmIvory leading-[1.12] font-light"
+            >
+              We don't sell tourist itineraries. We curate
+              <span class="italic text-limeAccent font-normal"
+                >rare passages</span
+              >
+              into the Earth’s remaining untamed wilderness.
+            </h2>
+
+            <p
+              class="text-warmIvory/70 text-base sm:text-lg leading-relaxed font-light"
+            >
+              Modern luxury is no longer defined by opulent velvet or gold
+              trim—it is defined by silence, pristine air, uncompromised
+              solitude, and raw connection with nature. Traviator leads small,
+              high-altitude, polar, and deep-wilderness expeditions crafted for
+              those who seek transformation over mere sight-seeing.
+            </p>
+
+            <!-- Live Metric Stats Grid -->
+            <div
+              class="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-6 border-t border-white/10 font-mono"
+            >
+              <div>
+                <span
+                  class="block font-serif text-3xl sm:text-4xl text-limeAccent font-normal"
+                  >36,400′</span
+                >
+                <span
+                  class="text-[10px] text-warmIvory/50 uppercase tracking-wider mt-1 block"
+                  >Highest Summit Reached</span
+                >
+              </div>
+              <div>
+                <span
+                  class="block font-serif text-3xl sm:text-4xl text-warmIvory font-normal"
+                  >-34°C</span
+                >
+                <span
+                  class="text-[10px] text-warmIvory/50 uppercase tracking-wider mt-1 block"
+                  >Lowest Polar Temp</span
+                >
+              </div>
+              <div>
+                <span
+                  class="block font-serif text-3xl sm:text-4xl text-warmIvory font-normal"
+                  >08 Max</span
+                >
+                <span
+                  class="text-[10px] text-warmIvory/50 uppercase tracking-wider mt-1 block"
+                  >Group Explorer Limit</span
+                >
+              </div>
+              <div>
+                <span
+                  class="block font-serif text-3xl sm:text-4xl text-limeAccent font-normal"
+                  >100%</span
+                >
+                <span
+                  class="text-[10px] text-warmIvory/50 uppercase tracking-wider mt-1 block"
+                  >Leave No Trace Guarantee</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Photo & Interactive Dispatch Card -->
+          <div class="lg:col-span-5 relative reveal-up">
+            <div
+              class="relative aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-2xl group"
+            >
+              <img
+                src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80"
+                alt="Mountain Peak Wilderness"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-obsidian via-transparent to-transparent"
+              ></div>
+
+              <div
+                class="absolute bottom-6 left-6 right-6 p-6 backdrop-blur-md bg-obsidian/70 border border-white/10 rounded-xl"
+              >
+                <span
+                  class="text-xs font-mono text-limeAccent uppercase tracking-widest block mb-1"
+                  >Dispatch #08 // PATAGONIA</span
+                >
+                <p class="text-xs text-warmIvory/80 font-serif italic">
+                  "To stand upon the edge of the Patagonian ice field is to
+                  understand how small and fortunate we truly are."
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION C: JOURNEYS BEYOND ORDINARY (FILTERABLE EXPEDITION CARDS) -->
+    <section
+      id="journeys"
+      class="py-28 px-6 lg:px-12 bg-slateDark relative border-t border-white/5"
+    >
+      <div class="max-w-7xl mx-auto">
+        <!-- Section Header -->
+        <div
+          class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 reveal-up"
+        >
+          <div>
+            <span
+              class="text-limeAccent font-mono text-xs uppercase tracking-[0.25em] block mb-2"
+              >// CURATED EXPEDITIONS</span
+            >
+            <h2
+              class="font-serif text-4xl sm:text-6xl text-warmIvory font-normal"
+            >
+              Journeys Beyond Ordinary
+            </h2>
+          </div>
+
+          <!-- Expedition Filters -->
+          <div class="flex flex-wrap gap-2 text-xs font-mono">
+            <button
+              onclick="filterJourneys('all')"
+              class="journey-filter-btn px-4 py-2 rounded-full border border-limeAccent bg-limeAccent text-obsidian transition-all cursor-pointer font-bold uppercase tracking-wider"
+              data-filter="all"
+            >
+              All Terrains
+            </button>
+            <button
+              onclick="filterJourneys('polar')"
+              class="journey-filter-btn px-4 py-2 rounded-full border border-white/10 bg-white/5 hover:border-limeAccent text-warmIvory/70 hover:text-warmIvory transition-all cursor-pointer uppercase tracking-wider"
+              data-filter="polar"
+            >
+              Polar & Arctic
+            </button>
+            <button
+              onclick="filterJourneys('altitude')"
+              class="journey-filter-btn px-4 py-2 rounded-full border border-white/10 bg-white/5 hover:border-limeAccent text-warmIvory/70 hover:text-warmIvory transition-all cursor-pointer uppercase tracking-wider"
+              data-filter="altitude"
+            >
+              High Altitude
+            </button>
+            <button
+              onclick="filterJourneys('volcanic')"
+              class="journey-filter-btn px-4 py-2 rounded-full border border-white/10 bg-white/5 hover:border-limeAccent text-warmIvory/70 hover:text-warmIvory transition-all cursor-pointer uppercase tracking-wider"
+              data-filter="volcanic"
+            >
+              Volcanic
+            </button>
+          </div>
+        </div>
+
+        <!-- Expedition Cards Grid -->
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          id="journeys-grid"
+        >
+          <!-- Card 1 -->
+          <div
+            class="journey-card journey-item polar group relative bg-slateCard rounded-2xl overflow-hidden border border-white/10 hover:border-limeAccent/50 transition-all duration-500 reveal-up flex flex-col justify-between"
+            data-category="polar"
+          >
+            <div class="relative h-72 overflow-hidden">
+              <img
+                src="https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&w=1000&q=80"
+                alt="Svalbard Odyssey"
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-slateCard via-transparent to-transparent"
+              ></div>
+              <span
+                class="absolute top-4 left-4 bg-obsidian/80 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-widest text-limeAccent border border-white/10"
+              >
+                78° N — Svalbard
+              </span>
+            </div>
+
+            <div class="p-6 flex-1 flex flex-col justify-between">
+              <div>
+                <div
+                  class="flex items-center justify-between text-xs text-warmIvory/50 font-mono mb-2"
+                >
+                  <span>12 DAYS</span>
+                  <span>DIFFICULTY: LEVEL IV</span>
+                </div>
+                <h3
+                  class="font-serif text-2xl text-warmIvory group-hover:text-limeAccent transition-colors mb-3"
+                >
+                  Svalbard Deep Arctic Passage
+                </h3>
+                <p
+                  class="text-xs text-warmIvory/60 leading-relaxed line-clamp-2 mb-6"
+                >
+                  Traverse fjord ice sheets, witness northern lights in silence,
+                  and track arctic fauna alongside polar survival masters.
+                </p>
+              </div>
+
+              <div
+                class="pt-4 border-t border-white/10 flex items-center justify-between font-mono"
+              >
+                <div>
+                  <span class="text-[10px] uppercase text-warmIvory/40 block"
+                    >Priced From</span
+                  >
+                  <span class="text-sm text-limeAccent font-bold"
+                    >$14,500 USD</span
+                  >
+                </div>
+                <button
+                  onclick="
+                    openExpeditionModal(
+                      'Svalbard Deep Arctic Passage',
+                      'Svalbard High Arctic',
+                      '12 Days',
+                      '78.2232° N, 15.6267° E',
+                      'Level IV — Extreme Cold',
+                      '$14,500 USD',
+                      'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&w=1200&q=80',
+                      'Embark on an uncompromised high-arctic vessel expedition through Svalbard archipelago. Experience deep-glacier ski traverses, ice-breaker navigation, and rare wildlife tracking.',
+                    )
+                  "
+                  class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-warmIvory hover:border-limeAccent hover:bg-limeAccent hover:text-obsidian transition-all cursor-pointer"
+                >
+                  <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div
+            class="journey-card journey-item altitude group relative bg-slateCard rounded-2xl overflow-hidden border border-white/10 hover:border-limeAccent/50 transition-all duration-500 reveal-up flex flex-col justify-between"
+            data-category="altitude"
+          >
+            <div class="relative h-72 overflow-hidden">
+              <img
+                src="https://images.unsplash.com/photo-1527004013197-933c4bb611b3?auto=format&fit=crop&w=1000&q=80"
+                alt="Patagonia Traverse"
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-slateCard via-transparent to-transparent"
+              ></div>
+              <span
+                class="absolute top-4 left-4 bg-obsidian/80 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-widest text-limeAccent border border-white/10"
+              >
+                51° S — Patagonia
+              </span>
+            </div>
+
+            <div class="p-6 flex-1 flex flex-col justify-between">
+              <div>
+                <div
+                  class="flex items-center justify-between text-xs text-warmIvory/50 font-mono mb-2"
+                >
+                  <span>14 DAYS</span>
+                  <span>DIFFICULTY: LEVEL III</span>
+                </div>
+                <h3
+                  class="font-serif text-2xl text-warmIvory group-hover:text-limeAccent transition-colors mb-3"
+                >
+                  Patagonia Southern Ice Field
+                </h3>
+                <p
+                  class="text-xs text-warmIvory/60 leading-relaxed line-clamp-2 mb-6"
+                >
+                  A high-end trek across the dramatic granite spires of Fitz Roy
+                  into the unexplored continental ice sheet.
+                </p>
+              </div>
+
+              <div
+                class="pt-4 border-t border-white/10 flex items-center justify-between font-mono"
+              >
+                <div>
+                  <span class="text-[10px] uppercase text-warmIvory/40 block"
+                    >Priced From</span
+                  >
+                  <span class="text-sm text-limeAccent font-bold"
+                    >$11,800 USD</span
+                  >
+                </div>
+                <button
+                  onclick="
+                    openExpeditionModal(
+                      'Patagonia Southern Ice Field',
+                      'Patagonian Andes',
+                      '14 Days',
+                      '50.5020° S, 73.1950° W',
+                      'Level III — High Trekking',
+                      '$11,800 USD',
+                      'https://images.unsplash.com/photo-1527004013197-933c4bb611b3?auto=format&fit=crop&w=1200&q=80',
+                      'Cross the granite cathedrals of Patagonia. Private eco-domes, glacier ice-climbing guidance, and remote helicopter access into the continental ice field.',
+                    )
+                  "
+                  class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-warmIvory hover:border-limeAccent hover:bg-limeAccent hover:text-obsidian transition-all cursor-pointer"
+                >
+                  <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div
+            class="journey-card journey-item altitude group relative bg-slateCard rounded-2xl overflow-hidden border border-white/10 hover:border-limeAccent/50 transition-all duration-500 reveal-up flex flex-col justify-between"
+            data-category="altitude"
+          >
+            <div class="relative h-72 overflow-hidden">
+              <img
+                src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1000&q=80"
+                alt="Karakoram K2 Ridge"
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-slateCard via-transparent to-transparent"
+              ></div>
+              <span
+                class="absolute top-4 left-4 bg-obsidian/80 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-mono uppercase tracking-widest text-limeAccent border border-white/10"
+              >
+                35° N — Karakoram
+              </span>
+            </div>
+
+            <div class="p-6 flex-1 flex flex-col justify-between">
+              <div>
+                <div
+                  class="flex items-center justify-between text-xs text-warmIvory/50 font-mono mb-2"
+                >
+                  <span>18 DAYS</span>
+                  <span>DIFFICULTY: LEVEL V</span>
+                </div>
+                <h3
+                  class="font-serif text-2xl text-warmIvory group-hover:text-limeAccent transition-colors mb-3"
+                >
+                  Karakoram K2 Base Traverse
+                </h3>
+                <p
+                  class="text-xs text-warmIvory/60 leading-relaxed line-clamp-2 mb-6"
+                >
+                  Journey along the Baltoro Glacier into Concordia—the throne
+                  room of the mountain gods surrounded by 8,000m giants.
+                </p>
+              </div>
+
+              <div
+                class="pt-4 border-t border-white/10 flex items-center justify-between font-mono"
+              >
+                <div>
+                  <span class="text-[10px] uppercase text-warmIvory/40 block"
+                    >Priced From</span
+                  >
+                  <span class="text-sm text-limeAccent font-bold"
+                    >$18,900 USD</span
+                  >
+                </div>
+                <button
+                  onclick="
+                    openExpeditionModal(
+                      'Karakoram K2 Base Traverse',
+                      'Karakoram Range, Pakistan',
+                      '18 Days',
+                      '35.8825° N, 76.5133° E',
+                      'Level V — High Altitude Mountaineering',
+                      '$18,900 USD',
+                      'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80',
+                      'Standing amidst the highest density of 8,000-meter peaks on earth. Full expedition support, high-altitude medical officers, and mountain guides.',
+                    )
+                  "
+                  class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-warmIvory hover:border-limeAccent hover:bg-limeAccent hover:text-obsidian transition-all cursor-pointer"
+                >
+                  <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION D: DESTINATION MATRIX & TERRAIN VIEWER -->
+    <section
+      id="destinations"
+      class="py-28 px-6 lg:px-12 bg-obsidian relative border-t border-white/5"
+    >
+      <div class="max-w-7xl mx-auto">
+        <div class="text-center max-w-2xl mx-auto mb-16 reveal-up">
+          <span
+            class="text-limeAccent font-mono text-xs uppercase tracking-[0.25em] block mb-2"
+            >// TERRAIN MATRIX</span
+          >
+          <h2
+            class="font-serif text-4xl sm:text-5xl text-warmIvory font-normal"
+          >
+            Uncharted Terrain Profiles
+          </h2>
+          <p class="text-warmIvory/60 text-sm mt-4 font-light">
+            Switch between world regions to inspect live telemetry data and
+            atmospheric conditions.
+          </p>
+        </div>
+
+        <div
+          class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-slateCard/50 border border-white/10 rounded-3xl p-6 lg:p-10 backdrop-blur-xl"
+        >
+          <!-- Region Selectors -->
+          <div class="lg:col-span-5 flex flex-col gap-4">
+            <button
+              onclick="switchDestination('iceland')"
+              id="dest-btn-iceland"
+              class="dest-selector-btn text-left p-6 rounded-2xl border border-limeAccent bg-limeAccent/10 transition-all cursor-pointer group"
+            >
+              <div class="flex items-center justify-between font-mono">
+                <span class="text-xs text-limeAccent uppercase tracking-widest"
+                  >01 // ICELAND</span
+                >
+                <span class="text-xs text-warmIvory/50">64° N</span>
+              </div>
+              <h3
+                class="font-serif text-2xl text-warmIvory group-hover:text-limeAccent transition-colors mt-1"
+              >
+                Vatnajökull Ice Desert
+              </h3>
+              <p class="text-xs text-warmIvory/60 mt-2 font-light">
+                Volcanic sand plains, sub-glacial volcanic craters, and thermal
+                ice chambers.
+              </p>
+            </button>
+
+            <button
+              onclick="switchDestination('atacama')"
+              id="dest-btn-atacama"
+              class="dest-selector-btn text-left p-6 rounded-2xl border border-white/10 bg-white/5 hover:border-limeAccent/50 transition-all cursor-pointer group"
+            >
+              <div class="flex items-center justify-between font-mono">
+                <span
+                  class="text-xs text-warmIvory/40 uppercase tracking-widest"
+                  >02 // CHILE</span
+                >
+                <span class="text-xs text-warmIvory/50">23° S</span>
+              </div>
+              <h3
+                class="font-serif text-2xl text-warmIvory group-hover:text-limeAccent transition-colors mt-1"
+              >
+                Atacama High Desert Plateau
+              </h3>
+              <p class="text-xs text-warmIvory/60 mt-2 font-light">
+                Salt flats, steaming geysers, and pristine uncompromised
+                dark-sky astronomy.
+              </p>
+            </button>
+
+            <button
+              onclick="switchDestination('bhutan')"
+              id="dest-btn-bhutan"
+              class="dest-selector-btn text-left p-6 rounded-2xl border border-white/10 bg-white/5 hover:border-limeAccent/50 transition-all cursor-pointer group"
+            >
+              <div class="flex items-center justify-between font-mono">
+                <span
+                  class="text-xs text-warmIvory/40 uppercase tracking-widest"
+                  >03 // BHUTAN</span
+                >
+                <span class="text-xs text-warmIvory/50">27° N</span>
+              </div>
+              <h3
+                class="font-serif text-2xl text-warmIvory group-hover:text-limeAccent transition-colors mt-1"
+              >
+                Himalayan Kingdom Ridge
+              </h3>
+              <p class="text-xs text-warmIvory/60 mt-2 font-light">
+                Sacred 7,000m peaks, ancient cliff sanctuaries, and untouched
+                pine valleys.
+              </p>
+            </button>
+          </div>
+
+          <!-- Preview Display -->
+          <div
+            class="lg:col-span-7 relative h-[450px] rounded-2xl overflow-hidden border border-white/10 group"
+          >
+            <div
+              id="dest-img-container"
+              class="absolute inset-0 bg-cover bg-center transition-all duration-700 scale-100 group-hover:scale-105"
+              style="
+                background-image: url(&quot;https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=1600&q=80&quot;);
+              "
+            >
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/20 to-transparent"
+              ></div>
+            </div>
+
+            <!-- Telemetry Strip -->
+            <div
+              class="absolute bottom-6 left-6 right-6 flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-obsidian/80 backdrop-blur-md border border-white/10 font-mono"
+            >
+              <div>
+                <span class="text-[10px] text-warmIvory/40 uppercase block"
+                  >Current Region</span
+                >
+                <span
+                  id="dest-location-text"
+                  class="text-xs text-limeAccent font-bold"
+                  >Vatnajökull Ice Cap, Iceland</span
+                >
+              </div>
+
+              <div class="flex items-center gap-6 text-xs">
+                <div>
+                  <span class="text-[10px] text-warmIvory/40 block">Temp</span>
+                  <span id="dest-temp-text" class="text-warmIvory">-6°C</span>
+                </div>
+                <div>
+                  <span class="text-[10px] text-warmIvory/40 block"
+                    >Elevation</span
+                  >
+                  <span id="dest-elevation-text" class="text-warmIvory"
+                    >1,820m</span
+                  >
+                </div>
+                <div>
+                  <span class="text-[10px] text-warmIvory/40 block"
+                    >Season</span
+                  >
+                  <span id="dest-season-text" class="text-limeAccent"
+                    >Sept — May</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION E: VISUAL BREAK & MARQUEE EXPERIENCE -->
+    <section
+      class="relative py-24 bg-obsidian overflow-hidden border-t border-b border-white/10"
+    >
+      <!-- Infinite Running Marquee -->
+      <div
+        class="animate-marquee whitespace-nowrap flex items-center gap-12 font-serif text-5xl sm:text-7xl lg:text-8xl text-white/10 select-none uppercase font-light"
+      >
+        <span>THE WORLD IS STILL WILD</span>
+        <span class="text-limeAccent italic font-normal">•</span>
+        <span>UNCHARTERED SANCTUARIES</span>
+        <span class="text-limeAccent italic font-normal">•</span>
+        <span>POLAR PASSAGES</span>
+        <span class="text-limeAccent italic font-normal">•</span>
+        <span>THE WORLD IS STILL WILD</span>
+        <span class="text-limeAccent italic font-normal">•</span>
+        <span>UNCHARTERED SANCTUARIES</span>
+        <span class="text-limeAccent italic font-normal">•</span>
+      </div>
+    </section>
+
+    <!-- SECTION F: ROUTE PLANNER & CUSTOM EXPEDITION FORM -->
+    <section
+      id="planner"
+      class="py-28 px-6 lg:px-12 bg-slateDark relative border-t border-white/5"
+    >
+      <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <!-- Left Details -->
+          <div class="lg:col-span-5 space-y-6 reveal-up">
+            <span
+              class="text-limeAccent font-mono text-xs uppercase tracking-[0.25em] block"
+              >// CUSTOM ROUTE PLANNER</span
+            >
+            <h2
+              class="font-serif text-4xl sm:text-5xl text-warmIvory font-normal"
+            >
+              Design Your Custom Passage
+            </h2>
+            <p class="text-warmIvory/60 text-sm leading-relaxed font-light">
+              Select your preferred terrain parameters, duration, and climate
+              profile. Our expedition directors will construct a private
+              zero-trace itinerary tailored to your group.
+            </p>
+
+            <div
+              class="p-6 rounded-2xl bg-obsidian/60 border border-white/10 space-y-3 font-mono"
+            >
+              <div class="flex items-center gap-3 text-xs text-limeAccent">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>PRIVATE EXPEDITION PROTOCOL</span>
+              </div>
+              <p class="text-xs text-warmIvory/50">
+                Includes satellite positioning beacons, medical evacuation
+                coverage, and private helicopter insertion logistics.
+              </p>
+            </div>
+          </div>
+
+          <!-- Right Interactive Form -->
+          <div
+            class="lg:col-span-7 bg-obsidian p-8 sm:p-10 rounded-3xl border border-white/10 shadow-2xl reveal-up font-mono"
+          >
+            <form
+              id="planner-form"
+              onsubmit="handlePlannerSubmit(event)"
+              class="space-y-6"
+            >
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    class="block text-xs text-warmIvory/60 uppercase tracking-widest mb-2"
+                    >Preferred Terrain</label
+                  >
+                  <select
+                    id="plan-terrain"
+                    class="w-full bg-slateCard border border-white/10 rounded-xl p-3.5 text-xs text-warmIvory focus:border-limeAccent focus:outline-none transition-colors"
+                  >
+                    <option value="Svalbard & Polar Arctic">
+                      Svalbard & Polar Arctic
+                    </option>
+                    <option value="High Altitude Andes / Karakoram">
+                      High Altitude Andes / Karakoram
+                    </option>
+                    <option value="Volcanic Fjords & Desert">
+                      Volcanic Fjords & Desert
+                    </option>
+                    <option value="Deep Coastal Wilderness">
+                      Deep Coastal Wilderness
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    class="block text-xs text-warmIvory/60 uppercase tracking-widest mb-2"
+                    >Duration</label
+                  >
+                  <select
+                    id="plan-duration"
+                    class="w-full bg-slateCard border border-white/10 rounded-xl p-3.5 text-xs text-warmIvory focus:border-limeAccent focus:outline-none transition-colors"
+                  >
+                    <option value="7 - 10 Days">7 - 10 Days</option>
+                    <option value="10 - 14 Days">10 - 14 Days</option>
+                    <option value="14 - 21 Days">14 - 21 Days</option>
+                    <option value="21+ Days (Custom Passage)">
+                      21+ Days (Custom Passage)
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    class="block text-xs text-warmIvory/60 uppercase tracking-widest mb-2"
+                    >Group Size</label
+                  >
+                  <input
+                    type="number"
+                    id="plan-group"
+                    min="1"
+                    max="8"
+                    value="2"
+                    class="w-full bg-slateCard border border-white/10 rounded-xl p-3.5 text-xs text-warmIvory focus:border-limeAccent focus:outline-none transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    class="block text-xs text-warmIvory/60 uppercase tracking-widest mb-2"
+                    >Explorer Email</label
+                  >
+                  <input
+                    type="email"
+                    id="plan-email"
+                    required
+                    placeholder="explorer@traviator.com"
+                    class="w-full bg-slateCard border border-white/10 rounded-xl p-3.5 text-xs text-warmIvory focus:border-limeAccent focus:outline-none transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  class="block text-xs text-warmIvory/60 uppercase tracking-widest mb-2"
+                  >Vision & Special Requirements</label
+                >
+                <textarea
+                  id="plan-notes"
+                  rows="3"
+                  placeholder="Fitness level, desired dates, preferred summit goals..."
+                  class="w-full bg-slateCard border border-white/10 rounded-xl p-3.5 text-xs text-warmIvory focus:border-limeAccent focus:outline-none transition-colors"
+                ></textarea>
+              </div>
+
+              <button
+                type="submit"
+                class="w-full py-4 rounded-xl bg-limeAccent text-obsidian font-bold text-xs uppercase tracking-[0.2em] hover:bg-white hover:shadow-[0_0_25px_rgba(212,243,74,0.4)] transition-all cursor-pointer"
+              >
+                Request Custom Route Dossier
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer
+      class="bg-obsidian pt-20 pb-12 px-6 lg:px-12 border-t border-white/10 text-xs text-warmIvory/50 font-mono"
+    >
+      <div class="max-w-7xl mx-auto">
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-16"
+        >
+          <!-- Brand Column -->
+          <div class="lg:col-span-2 space-y-4">
+            <a href="#" class="flex items-center gap-3">
+              <div
+                class="w-8 h-8 rounded-full border border-limeAccent flex items-center justify-center"
+              >
+                <span
+                  class="text-limeAccent font-serif italic text-lg font-bold"
+                  >T</span
+                >
+              </div>
+              <span
+                class="font-serif tracking-[0.2em] text-xl font-bold text-warmIvory"
+                >TRAVIATOR</span
+              >
+            </a>
+            <p
+              class="text-xs text-warmIvory/60 max-w-sm leading-relaxed font-sans font-light"
+            >
+              Bespoke luxury adventure travel re-imagined for wilder souls.
+              Pioneering zero-trace, high-altitude, and polar expeditions
+              worldwide.
+            </p>
+            <div class="text-[11px] text-limeAccent pt-2">
+              <span>LIVE UTC CLOCK: </span
+              ><span id="utc-clock">00:00:00 UTC</span>
+            </div>
+          </div>
+
+          <!-- Navigation Links -->
+          <div>
+            <span class="text-warmIvory/80 uppercase tracking-widest block mb-4"
+              >Navigations</span
+            >
+            <ul class="space-y-2.5 font-light">
+              <li>
+                <a href="#about" class="hover:text-limeAccent transition-colors"
+                  >Philosophy</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#journeys"
+                  class="hover:text-limeAccent transition-colors"
+                  >Featured Journeys</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#destinations"
+                  class="hover:text-limeAccent transition-colors"
+                  >Terrain Matrix</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#planner"
+                  class="hover:text-limeAccent transition-colors"
+                  >Route Planner</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <!-- Compliance -->
+          <div>
+            <span class="text-warmIvory/80 uppercase tracking-widest block mb-4"
+              >Compliance</span
+            >
+            <ul class="space-y-2.5 font-light">
+              <li>
+                <a href="#" class="hover:text-limeAccent transition-colors"
+                  >Carbon Offsetting</a
+                >
+              </li>
+              <li>
+                <a href="#" class="hover:text-limeAccent transition-colors"
+                  >Safety Standard</a
+                >
+              </li>
+              <li>
+                <a href="#" class="hover:text-limeAccent transition-colors"
+                  >Satellite Comms</a
+                >
+              </li>
+              <li>
+                <a href="#" class="hover:text-limeAccent transition-colors"
+                  >Evacuation Cover</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <!-- Gazette Dispatch -->
+          <div>
+            <span class="text-warmIvory/80 uppercase tracking-widest block mb-4"
+              >Wilderness Gazette</span
+            >
+            <p class="text-[11px] text-warmIvory/50 mb-3 font-sans">
+              Subscribe for rare dispatch logs and unreleased expedition
+              openings.
+            </p>
+            <form
+              onsubmit="handleNewsletterSubmit(event)"
+              class="flex flex-col gap-2"
+            >
+              <input
+                type="email"
+                id="newsletter-email"
+                required
+                placeholder="email@domain.com"
+                class="bg-slateCard border border-white/10 rounded-lg p-2.5 text-xs text-warmIvory focus:border-limeAccent focus:outline-none"
+              />
+              <button
+                type="submit"
+                class="bg-limeAccent text-obsidian font-bold py-2 rounded-lg hover:bg-white transition-colors uppercase tracking-wider text-[10px]"
+              >
+                Join Dispatches
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div
+          class="border-t border-white/10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px]"
+        >
+          <p>© 2026 TRAVIATOR ADVENTURES INC. ALL RIGHTS RESERVED.</p>
+          <a href="#" class="text-limeAccent hover:underline">Back To Top ↑</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- EXPEDITION PREVIEW MODAL DRAWER -->
+    <div
+      id="expedition-modal"
+      class="fixed inset-0 z-[90] bg-obsidian/90 backdrop-blur-xl flex items-center justify-center p-4 sm:p-6 opacity-0 pointer-events-none transition-opacity duration-300"
+    >
+      <div
+        class="bg-slateCard border border-white/10 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-10 relative shadow-2xl"
+      >
+        <button
+          onclick="closeExpeditionModal()"
+          class="absolute top-6 right-6 w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-warmIvory hover:text-limeAccent hover:border-limeAccent transition-all"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <span
+          id="modal-region"
+          class="font-mono text-xs text-limeAccent uppercase tracking-widest block mb-2"
+          >Region Tag</span
+        >
+        <h3
+          id="modal-title"
+          class="font-serif text-3xl sm:text-4xl text-warmIvory mb-4"
+        >
+          Expedition Title
+        </h3>
+
+        <div class="relative h-64 sm:h-80 rounded-2xl overflow-hidden mb-6">
+          <img
+            id="modal-img"
+            src=""
+            alt="Expedition"
+            class="w-full h-full object-cover"
+          />
+        </div>
+
+        <div
+          class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-obsidian border border-white/10 font-mono text-xs mb-6"
+        >
+          <div>
+            <span class="text-[10px] text-warmIvory/40 block">DURATION</span>
+            <span id="modal-duration" class="text-warmIvory">12 Days</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-warmIvory/40 block">COORDINATES</span>
+            <span id="modal-coords" class="text-warmIvory">64° N</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-warmIvory/40 block">DIFFICULTY</span>
+            <span id="modal-difficulty" class="text-warmIvory">Level IV</span>
+          </div>
+          <div>
+            <span class="text-[10px] text-warmIvory/40 block">INVESTMENT</span>
+            <span id="modal-price" class="text-limeAccent font-bold"
+              >$14,500</span
+            >
+          </div>
+        </div>
+
+        <p
+          id="modal-desc"
+          class="text-warmIvory/70 text-sm leading-relaxed mb-8 font-light font-sans"
+        >
+          Description paragraph goes here.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 font-mono">
+          <a
+            href="#planner"
+            onclick="closeExpeditionModal()"
+            class="flex-1 py-3.5 rounded-full bg-limeAccent text-obsidian font-bold text-xs uppercase tracking-widest text-center hover:bg-white transition-all"
+          >
+            Inquire For Next Departure
+          </a>
+          <button
+            onclick="closeExpeditionModal()"
+            class="px-6 py-3.5 rounded-full border border-white/20 text-warmIvory text-xs uppercase tracking-widest hover:border-limeAccent transition-all"
+          >
+            Close Preview
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- JAVASCRIPT & THREE.JS 3D GLOBE ENGINE -->
+    <script src="script.js"></script>
+  </body>
+</html>
