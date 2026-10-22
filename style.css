@@ -136,6 +136,14 @@
         cursor: pointer;
     }
 }
+#globe-canvas {
+    touch-action: none;
+    cursor: grab;
+}
+
+#globe-canvas:active {
+    cursor: grabbing;
+}
 
 /* Respect Reduced Motion Preferences */
 @media (prefers-reduced-motion: reduce) {

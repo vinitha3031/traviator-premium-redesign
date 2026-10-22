@@ -165,56 +165,85 @@
             scene.add(particlesMesh);
 
             // Drag Controls State
-            let isDragging = false;
-            let previousMousePosition = { x: 0, y: 0 };
 
-            container.addEventListener('mousedown', (e) => {
+            // Drag Controls State — desktop + mobile
+            let isDragging = false;
+            let previousPointerPosition = { x: 0, y: 0 };
+
+            // Allow finger dragging without the browser taking over
+            canvas.style.touchAction = 'none';
+
+            container.addEventListener('pointerdown', (e) => {
                 isDragging = true;
+
+                previousPointerPosition = {
+                    x: e.clientX,
+                    y: e.clientY
+                };
+
+                container.setPointerCapture(e.pointerId);
             });
 
-            container.addEventListener('mousemove', (e) => {
+            container.addEventListener('pointermove', (e) => {
                 const rect = container.getBoundingClientRect();
-                mouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
-                mouse.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
+
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
                 if (isDragging) {
-                    const deltaMove = {
-                        x: e.clientX - previousMousePosition.x,
-                        y: e.clientY - previousMousePosition.y
+                    const deltaX = e.clientX - previousPointerPosition.x;
+                    const deltaY = e.clientY - previousPointerPosition.y;
+
+                    globeGroup.rotation.y += deltaX * 0.005;
+                    globeGroup.rotation.x += deltaY * 0.005;
+
+                    previousPointerPosition = {
+                        x: e.clientX,
+                        y: e.clientY
                     };
-                    globeGroup.rotation.y += deltaMove.x * 0.005;
-                    globeGroup.rotation.x += deltaMove.y * 0.005;
+
+                    return;
                 }
 
-                previousMousePosition = { x: e.clientX, y: e.clientY };
+                // Waypoint hover detection (desktop)
+                if (e.pointerType === 'mouse') {
+                    raycaster.setFromCamera(mouse, camera);
+                    const intersects = raycaster.intersectObjects(waypointMarkers);
 
-                // Raycast Waypoints Hover Test
-                raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects(waypointMarkers);
+                    const tooltip = document.getElementById('globe-tooltip');
 
-                const tooltip = document.getElementById('globe-tooltip');
-                if (intersects.length > 0) {
-                    const target = intersects[0].object.userData;
-                    document.getElementById('tooltip-title').textContent = target.name;
-                    document.getElementById('tooltip-coords').textContent = `${target.lat}° N, ${target.lon}° E`;
-                    document.getElementById('tooltip-alt').textContent = target.alt;
-                    document.getElementById('tooltip-desc').textContent = target.desc;
+                    if (intersects.length > 0) {
+                        const target = intersects[0].object.userData;
 
-                    tooltip.style.left = `${e.clientX - rect.left}px`;
-                    tooltip.style.top = `${e.clientY - rect.top}px`;
-                    tooltip.classList.remove('opacity-0');
+                        document.getElementById('tooltip-title').textContent = target.name;
+                        document.getElementById('tooltip-coords').textContent =
+                            `${target.lat}° N, ${target.lon}° E`;
+                        document.getElementById('tooltip-alt').textContent = target.alt;
+                        document.getElementById('tooltip-desc').textContent = target.desc;
 
-                    // Sync telemetry box
-                    document.getElementById('telemetry-target').textContent = target.name;
-                    document.getElementById('telemetry-temp').textContent = target.temp;
-                    document.getElementById('telemetry-risk').textContent = target.risk;
-                    document.getElementById('globe-active-waypoint').textContent = `SELECTED WAYPOINT: ${target.name.toUpperCase()}`;
-                } else {
-                    tooltip.classList.add('opacity-0');
+                        tooltip.style.left = `${e.clientX - rect.left}px`;
+                        tooltip.style.top = `${e.clientY - rect.top}px`;
+                        tooltip.classList.remove('opacity-0');
+
+                        document.getElementById('telemetry-target').textContent = target.name;
+                        document.getElementById('telemetry-temp').textContent = target.temp;
+                        document.getElementById('telemetry-risk').textContent = target.risk;
+                        document.getElementById('globe-active-waypoint').textContent =
+                            `SELECTED WAYPOINT: ${target.name.toUpperCase()}`;
+                    } else {
+                        tooltip.classList.add('opacity-0');
+                    }
                 }
             });
 
-            window.addEventListener('mouseup', () => { isDragging = false; });
+            function stopGlobeDragging() {
+                isDragging = false;
+            }
+
+            container.addEventListener('pointerup', stopGlobeDragging);
+            container.addEventListener('pointercancel', stopGlobeDragging);
+            container.addEventListener('lostpointercapture', stopGlobeDragging);
+
 
             // Responsive Canvas Resizing
             window.addEventListener('resize', () => {
